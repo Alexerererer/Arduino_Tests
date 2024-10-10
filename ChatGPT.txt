@@ -1,0 +1,65 @@
+#include <FastLED.h>
+#include <ezButton.h>
+
+#define LED_PIN     13
+#define NUM_LEDS    120
+
+CRGB leds[NUM_LEDS];
+ezButton button(2);  // Example button on pin 2
+
+unsigned long prevUpdateTime = 0;
+uint8_t pos = 0;
+bool dir = true;
+bool buttonPressed = false;
+
+void setup() {
+  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);  // Set up the LED strip
+  FastLED.setBrightness(50);  // Set the brightness of the LEDs
+}
+
+void loop() {
+  // Check if the button is pressed
+  button.loop();  // Call the ezButton loop function
+  if (button.isPressed()) {
+    buttonPressed = true;
+  }
+
+  // Update the LEDs if the button is not pressed
+  if (!buttonPressed) {
+    unsigned long currentTime = millis();
+    unsigned long elapsedTime = currentTime - prevUpdateTime;
+
+    // Update the LEDs if enough time has elapsed since the last update
+    if (elapsedTime >= 50) {  // Update every 50 milliseconds
+      FastLED.clear();  // Clear all LEDs
+      // Set the 20 lit blue LEDs
+      for (int i = 0; i < 20; i++) {
+        leds[pos + i] = CRGB::Blue;
+      }
+
+      // Update the position and direction of the line
+      if (pos == 0) {
+        dir = true;
+      } else if (pos == NUM_LEDS - 20) {
+        dir = false;
+      }
+      if (dir) {
+        pos++;
+      } else {
+        pos--;
+      }
+
+      // Update the LED strip
+      FastLED.show();
+
+      prevUpdateTime = currentTime;  // Record the time of the last update
+    }
+  } else {  // Button is pressed
+    // Turn off all LEDs and reset the animation
+    FastLED.clear();
+    FastLED.show();
+    pos = 0;
+    dir = true;
+    buttonPressed = false;  // Reset the button press flag
+  }
+}
